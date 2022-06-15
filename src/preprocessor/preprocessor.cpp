@@ -566,7 +566,7 @@ void IncludesProcessor::InclusionDirective(SourceLocation HashLoc, const Token &
 
     if ((mod = sanitize(mod, libroot)) != "") {
         /* add header dependency */
-        incDeps[ mod ].push_back(FileName);
+        incDeps[ mod ].push_back(FileName.str());
     }
 }
 
@@ -610,8 +610,8 @@ unique_ptr<ASTConsumer> FuzzGenPreprocessor::CreateASTConsumer(CompilerInstance 
 //
 bool FuzzGenPreprocessor::BeginSourceFileAction(CompilerInstance &compInst) {
     /* get all input files (we 're only interested in the 1st one) */
-    vector<FrontendInputFile> Inputs = compInst.getFrontendOpts().Inputs;
-    string filename = Inputs[0].getFile();
+    auto Inputs = compInst.getFrontendOpts().Inputs;
+    string filename = Inputs[0].getFile().str();
 
 
     if ((filename = sanitize(filename, libroot)) != "") {
@@ -852,8 +852,11 @@ int main(int argc, const char *argv[]) {
            << "(failure to load a compilation database)...\n";
 
     /* parse command line arguments */
-    CommonOptionsParser OptionsParser(argc, argv, optCat, cl::OneOrMore, toolOverview);
 
+    auto __tmp_OptionsParser =
+        CommonOptionsParser::create(argc, argv, optCat, cl::OneOrMore, toolOverview);
+
+    CommonOptionsParser& OptionsParser = __tmp_OptionsParser.get();
 
     /* try to get real path from library root */
     if (realpath(arglibroot.c_str(), realPath) == NULL) {
