@@ -473,7 +473,7 @@ void Dependence::findInterDependencies() {
             for (unsigned m=0; m<call2->getNumArgOperands(); ++m) {
 
                 /* special case */
-                if (call1->getName() == call2->getName() && m != n) continue;
+                if (call1->getName().str() == call2->getName().str() && m != n) continue;
 
     
                 /* find alloca's for each argument */
@@ -770,7 +770,7 @@ void Dependence::assignDependencies() {
             if (AADG[v].APICall == nullptr) { 
                 // throw FuzzGenException("assignDependencies(): AADG node with no APICall object");
 
-                warning() << "AADG node #" << v << " has no APICall object.\n";             
+                fwarning() << "AADG node #" << v << " has no APICall object.\n";             
                 continue;
             }
 
@@ -850,7 +850,7 @@ void Dependence::print() {
             }
                
             oss << " (" << dep->AADGVertex << ") ";
-            oss << "of " << dep->call->getFunction()->getName() << ":" << *dep->call;
+            oss << "of " << dep->call->getFunction()->getName().str() << ":" << *dep->call;
 
             info(v1) << oss.str() << "\n";
         }

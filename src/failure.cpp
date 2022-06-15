@@ -142,7 +142,7 @@ bool Failure::blkCntRecursive(const BasicBlock *entry, unsigned &N,
                 const Function *callee = call->getCalledFunction();
                 if (!callee) continue;              // skip empty callees
                 
-                if (callee->getName() == "exit") {                    
+                if (callee->getName().str() == "exit") {                    
                     termBlk = true;                 // (terminator block) 
                     break;                          // path does not terminate naturally
                 }
@@ -169,8 +169,7 @@ bool Failure::blkCntRecursive(const BasicBlock *entry, unsigned &N,
         /* if block is a terminator stop exploring current path */
         if (!termBlk) {
             /* look for adjacent BBs in CFG */
-            const TerminatorInst *ti = blk->getTerminator();
-
+            const Instruction *ti = blk->getTerminator();
 
             /* if block has no successors, then path terminates naturally */
             if (ti->getNumSuccessors() == 0) {

@@ -76,8 +76,8 @@ void Magic::clear() {
 // library's metadata.
 //
 inline bool Magic::isArray(const Argument &arg) {
-    string func = arg.getParent()->getName();
-    string name = arg.getName();
+    string func = arg.getParent()->getName().str();
+    string name = arg.getName().str();
 
 
     if (name == "") {
@@ -151,12 +151,12 @@ MagicData<T> *Magic::dataflowAnalysis(const Argument &arg, const AllocaInst *all
 
     StackFrame   *last = nullptr,                   // last visited node (not parent)
                  *temp;                             // temporary node
-    bool         read  = false;                     // true when argument's value is being read
+    //bool         read  = false;                     // true when argument's value is being read
     
     MagicData<T> *md   = new MagicData<T>();        // magic data
     
 
-    info(v3) << "  Starting Data Flow analysis on '" << arg.getParent()->getName() << "' " 
+    info(v3) << "  Starting Data Flow analysis on '" << arg.getParent()->getName().str()<< "' " 
              << "at depth:" << depth << " from:" << *alloca << "\n";
 
     // Don't clear 'visited', as it's global for all alloca's
@@ -203,7 +203,7 @@ MagicData<T> *Magic::dataflowAnalysis(const Argument &arg, const AllocaInst *all
 
             // TODO: Check this again.
             if (last->read && dyn_cast<LoadInst>(last->inst) && ldty->isIntegerTy()) {
-                read = true;
+                //read = true;
 
                 fatal() << "A buffer read has been detected from parent.\n";
             }
@@ -353,7 +353,7 @@ MagicData<T> *Magic::dataflowAnalysis(const Argument &arg, const AllocaInst *all
             if (ldty->isIntegerTy() || ldty->isFloatTy() || ldty->isDoubleTy()) {                                
                 info(v3) << "    A buffer read has been detected from LoadInst.\n";
 
-                read = true;                        // argument is being read!
+                //read = true;                        // argument is being read!
             }
         }
 
@@ -425,7 +425,7 @@ MagicData<T> *Magic::dataflowAnalysis(const Argument &arg, const AllocaInst *all
             }
 
 
-            info(v3) << "  Calling function '" << callee->getName() << "' ...\n";
+            info(v3) << "  Calling function '" << callee->getName().str()<< "' ...\n";
 
             /* iterate over arguments of CallInst and callee in parallel */
             for (a1=call->arg_begin(), a2=callee->arg_begin();
@@ -436,11 +436,11 @@ MagicData<T> *Magic::dataflowAnalysis(const Argument &arg, const AllocaInst *all
 
                     /* loop detection first */
                     if (funcVisited.find(a2) != funcVisited.end()) {
-                        remark(v3) << "  Function '" << callee->getName() 
+                        fremark(v3) << "  Function '" << callee->getName().str()
                                    << " 'has already been visited. Skip.\n";
 
                     } else if (depth < ctx->maxDepth) {
-                        remark(v3) << "  Recursively calling argSpaceInference() for deep "
+                        fremark(v3) << "  Recursively calling argSpaceInference() for deep "
                                    << "argument analysis...\n";
 
                         funcVisited[ a2 ] = 1;      // mark argument as visited
@@ -448,7 +448,7 @@ MagicData<T> *Magic::dataflowAnalysis(const Argument &arg, const AllocaInst *all
                         /* start all over again and merge results */
                         coalesce(md, argSpaceInference<T>(*a2, depth + 1));
                     } else {
-                        remark(v3) << "Maximum recursion depth has been reached. "
+                        fremark(v3) << "Maximum recursion depth has been reached. "
                                    << "Skipping function\n";
                     }
 
@@ -544,7 +544,7 @@ MagicData<T> *Magic::dataflowAnalysis(const Argument &arg, const AllocaInst *all
 
 
     // we don't care if a variable is write-only, as it's not returned
-    if (!read) ; // md->addAttr(ATTR_WRITEONLY);
+    //if (!read) md->addAttr(ATTR_WRITEONLY);
 
 
     /* RIP all defunct nodes */
@@ -552,7 +552,7 @@ MagicData<T> *Magic::dataflowAnalysis(const Argument &arg, const AllocaInst *all
     defunct.clear();
 
 
-    info(v3) << "  Finishing Data Flow analysis on '" << arg.getParent()->getName() << "' " 
+    info(v3) << "  Finishing Data Flow analysis on '" << arg.getParent()->getName().str()<< "' " 
              << "from:" << *alloca << "\n";
 
     return md;
@@ -671,7 +671,7 @@ MagicData<T> *Magic::argSpaceInference(const Argument &arg, int depth) {
     // --------------------------------------------------------------------- //
 
     /* check whether size heuristic gets satisfied */
-    if (arg.hasName() && sizeNames.find(arg.getName()) != sizeNames.end() &&
+    if (arg.hasName() && sizeNames.find(arg.getName().str()) != sizeNames.end() &&
             arg.getType()->isIntegerTy() &&
             (isArray(getPreceding(arg)) || getPreceding(arg).getType()->isArrayTy())) {
 
@@ -741,7 +741,7 @@ MagicData<T> *Magic::argSpaceInference(const Argument &arg, int depth) {
     ostringstream oss;
     oss << "0x" << hex << md->attr;
 
-    remark(v3) << "Argument attributes: " << oss.str() << ". Values: " << foo << "\n";
+    fremark(v3) << "Argument attributes: " << oss.str() << ". Values: " << foo << "\n";
 
     return md;                                      // return the magic data
 }
@@ -759,7 +759,7 @@ inline void Magic::coalesce(MagicData<T> *m1, MagicData<T> *m2) {
     string f;
     ostringstream s(f);
     s << hex <<  m1->attr << " : " << m2->attr;
-    warning()  << "COALESCE: " << s.str() << "\n";
+    fwarning()  << "COALESCE: " << s.str() << "\n";
 */
     if (!m1->attr && !m2->attr) {
         /* do nothing here */

@@ -46,12 +46,13 @@
 #include "llvm/Pass.h"                              // llvm includes
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Function.h"
-#include "llvm/IR/CallSite.h"
+//#include "llvm/IR/CallSite.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/Passes.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/InitializePasses.h"
 
 #include <typeinfo>                                 // c++ includes
 #include <cstring>

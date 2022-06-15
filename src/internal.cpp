@@ -60,7 +60,7 @@ Internal::Internal(set <string> *libAPI, vector<interwork::APICall*> *calls, Con
 
 
     if (libAPI->size() < 1) {                       // is there any to analyze?
-        warning() << "There are no functions to analyze!\n";
+        fwarning() << "There are no functions to analyze!\n";
 
         throw FuzzGenException("Empty API");        // abort
     }
@@ -135,23 +135,23 @@ bool Internal::runOnModule(Module &M) {
         /* check whether function is in API */
         switch (mode) {
           case ANALYZE_ALL:                         // analyze all API functions
-            if (!libAPI->count(func.getName())) {
+            if (!libAPI->count(func.getName().str())) {
                 continue;                           // count is zero => function isn't in the set
             }
             break;
 
           case ANALYZE_SINGLE:                      // analyze a specific function
-            if (libcall != func.getName()) {
+            if (libcall != func.getName().str()) {
                 continue;
             }
         }
 
-        info(v0) << "================================ Analyzing '" << func.getName() 
+        info(v0) << "================================ Analyzing '" << func.getName().str()
                  << "' ================================\n";
 
 
         interwork::APICall *call = new interwork::APICall();
-        call->name = func.getName();
+        call->name = func.getName().str();
 
         /* get number of arguments */
         call->nargs = func.arg_size();
@@ -159,7 +159,7 @@ bool Internal::runOnModule(Module &M) {
 
         /* what about variadic functions? External analysis will reveal the variadic arguments */
         if (func.isVarArg()) {
-            warning() << "Variadic functions can be problematic but FuzzGen will do its best :)\n";
+            fwarning() << "Variadic functions can be problematic but FuzzGen will do its best :)\n";
 
             call->isVariadic = true;                // mark function as variadic            
         }
@@ -184,9 +184,9 @@ bool Internal::runOnModule(Module &M) {
                 string             type_str;
                 raw_string_ostream raw(type_str);   // create an llvm stream
 
-                raw << "Argument analysis on " << jj->getParent()->getName() << "(... ";
+                raw << "Argument analysis on " << jj->getParent()->getName().str()<< "(... ";
                 argTy->print(raw);                  // get type as string
-                raw << " " << jj->getName() << " ...) failed. Function is discarded.";
+                raw << " " << jj->getName().str()<< " ...) failed. Function is discarded.";
 
                 ctx->reportIssue(raw.str());
 

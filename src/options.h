@@ -39,7 +39,7 @@
 #ifndef LIBRARY_OPTIONS_H
 #define LIBRARY_OPTIONS_H
 
-
+#include"llvm/Support/CommandLine.h"
 
 // ------------------------------------------------------------------------------------------------
 // Category to place all arguments.
@@ -47,11 +47,10 @@
 cl::OptionCategory FuzzGenOpts_General("General Options");
 cl::OptionCategory FuzzGenOpts_FuzzGen("Fuzzer Generation Options");
 cl::OptionCategory FuzzGenOpts_Android("Fuzzer Generation Options for Android");
-cl::OptionCategory FuzzGenOpts_Debian ("Fuzzer Generation Options for Debian");
 
 // place all related options into an array
-cl::OptionCategory *OptArray[5] = {
-    &FuzzGenOpts_General, &FuzzGenOpts_FuzzGen, &FuzzGenOpts_Android, &FuzzGenOpts_Debian, nullptr
+cl::OptionCategory *OptArray[4] = {
+    &FuzzGenOpts_General, &FuzzGenOpts_FuzzGen, &FuzzGenOpts_Android, nullptr
 };
 
 ArrayRef<cl::OptionCategory *> RelatedOpts(&OptArray[0], &OptArray[4]);

@@ -40,6 +40,7 @@
 #ifndef LIBRARY_COMMON_H
 #define LIBRARY_COMMON_H
 
+#include "llvm/Config/llvm-config.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Pass.h"
 
@@ -369,9 +370,9 @@ private:
 // ------------------------------------------------------------------------------------------------
 /* that's definitely not the best way to do it, but it works */
 #define info(level)     outs() << Info(Info::STATUS, Verbosity::level)
-#define remark(level)   outs() << Info(Info::REMARK, Verbosity::level)
+#define fremark(level)   outs() << Info(Info::REMARK, Verbosity::level)
 #define emph(level)     outs() << Info(Info::EMPH, Verbosity::level)
-#define warning()       errs() << Info(Info::WARNING, v0)
+#define fwarning()       errs() << Info(Info::WARNING, v0)
 #define fatal()         errs() << Info(Info::FATAL, v0)
 
 // ------------------------------------------------------------------------------------------------

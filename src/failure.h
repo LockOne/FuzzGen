@@ -45,9 +45,10 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Instruction.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Constants.h"
-#include "llvm/IR/CallSite.h"
+//#include "llvm/IR/CallSite.h"
 
 #include <string>                                   // c++ includes
 #include <vector> 

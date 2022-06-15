@@ -157,13 +157,13 @@ size_t Layout::makeAbstractAPIDependenceGraph(const Function &F, Graph &G, int d
 
     /* Recursive functions result in infinity loops. To prevent this we use a call stack */
     // (function names are unique in the same module)
-    if (AADGCallStack.find(F.getName()) != AADGCallStack.end()) {
-        warning() << "Recursive function found in AADG construction. Ignore it...\n";
+    if (AADGCallStack.find(F.getName().str()) != AADGCallStack.end()) {
+        fwarning() << "Recursive function found in AADG construction. Ignore it...\n";
         
         return 0;
 
     } else {
-        AADGCallStack.insert(F.getName());          // add function to the call stack
+        AADGCallStack.insert(F.getName().str());          // add function to the call stack
     }
 
 
@@ -178,7 +178,7 @@ size_t Layout::makeAbstractAPIDependenceGraph(const Function &F, Graph &G, int d
      */
     ++funID;
 
-    info(v2) << pad(deep) << "* Entering '" << F.getName() << "' (" << funID << ") *\n";
+    info(v2) << pad(deep) << "* Entering '" << F.getName().str()<< "' (" << funID << ") *\n";
 
 
 
@@ -220,11 +220,11 @@ size_t Layout::makeAbstractAPIDependenceGraph(const Function &F, Graph &G, int d
                 if (!callee) continue;              // skip empty callees
 
                 // Alternative way to get function name:
-                //      string name = call->getOperand(call->getNumOperands() - 1)->getName();
+                //      string name = call->getOperand(call->getNumOperands() - 1)->getName().str()
 
 
                 /* check if called function is part of the API */
-                if (libAPI.find(callee->getName()) != libAPI.end()) {
+                if (libAPI.find(callee->getName().str()) != libAPI.end()) {
 
                     // It's possible that a single BB invokes >1 root functions. In that case,
                     // we split the AADG node into 2 and we connect them with a single edge.
@@ -347,7 +347,7 @@ size_t Layout::makeAbstractAPIDependenceGraph(const Function &F, Graph &G, int d
 
 
         /* look for adjacent BBs in CFG (essentially, slowly copy edges from CFG to AADG) */
-        const TerminatorInst *ti = blk->getTerminator();
+        const Instruction *ti = blk->getTerminator();
 
         /* get BB's terminator instruction and look for successor BBs */
         for (unsigned i=0; i<ti->getNumSuccessors(); ++i) {
@@ -447,7 +447,7 @@ size_t Layout::makeAbstractAPIDependenceGraph(const Function &F, Graph &G, int d
         vertex_t v = vertex(*ii, G);
 
   
-        interwork::APICall *intlCall = findAPICall(G[v].inst->getCalledFunction()->getName());
+        interwork::APICall *intlCall = findAPICall(G[v].inst->getCalledFunction()->getName().str());
 
         if (intlCall == nullptr) {
             G[v].APICall = new interwork::APICall(); // nullptr;    
@@ -460,7 +460,7 @@ size_t Layout::makeAbstractAPIDependenceGraph(const Function &F, Graph &G, int d
     // --------------------------------------------------------------------- //
     //                   * Print all vertices and edges *                    //
     // --------------------------------------------------------------------- //
-    info(v2) << pad(deep) << "Printing vertices for '" << F.getName() << "' ...\n";
+    info(v2) << pad(deep) << "Printing vertices for '" << F.getName().str()<< "' ...\n";
 
     for (vertex_iterator ii=vertices(G).first; ii!=vertices(G).second; ++ii) {
         vertex_t v = vertex(*ii, G);
@@ -470,16 +470,16 @@ size_t Layout::makeAbstractAPIDependenceGraph(const Function &F, Graph &G, int d
     }
 
 
-    info(v2) << pad(deep) << "Printing edges for '" << F.getName() << "' ...\n";
+    info(v2) << pad(deep) << "Printing edges for '" << F.getName().str()<< "' ...\n";
 
     for (edge_iterator ii=edges(G).first; ii!=edges(G).second; ++ii) {
         info(v2) <<  pad(deep) <<"(" << source(*ii, G) << ", " << target(*ii, G) << ")\n";
     }
 
 
-    info(v2) << pad(deep) << "* Exiting '" << F.getName() << "' *\n";
+    info(v2) << pad(deep) << "* Exiting '" << F.getName().str()<< "' *\n";
 
-    AADGCallStack.erase(F.getName());               // drop function from the call stack
+    AADGCallStack.erase(F.getName().str());               // drop function from the call stack
 
 
     return num_vertices(G);                         // return number of nodes left in AADG
@@ -943,8 +943,8 @@ bool Layout::visualizeAADG(const string filename) {
 
          dot << v << "\t[shape=box; style=filled; fillcolor=" << color << "; "
              << "label=\"#" << v << ":" << AADG[v].funID << " "
-             << AADG[v].inst->getFunction()->getName() 
-             << "\\n" << callee->getName() << type
+             << AADG[v].inst->getFunction()->getName().str()
+             << "\\n" << callee->getName().str()<< type
              << "\"];" << "\n";
     }
 
@@ -1013,9 +1013,9 @@ bool Layout::visualizeAADG(const string filename) {
 // 
 // 
 //         dot << v << "\t[shape=box; label=\"#" << v << ": "
-//             << AADG[v].inst->getFunction()->getName() 
+//             << AADG[v].inst->getFunction()->getName().str()
 //             // << "\\n" << *AADG[v].inst << "\"];" << "\n";
-//             << "\\n" << callee->getName() << type
+//             << "\\n" << callee->getName().str()<< type
 //             << "\"];" << "\n";
 //     }
 // 
@@ -1157,7 +1157,7 @@ bool Layout::deleteNode(vertex_t v) {
 
         /* if root has >1 children we have a problem */
         if (ctr > 1) {
-            warning() << "Cannot delete vertex '" << v << "' from AADG\n";
+            fwarning() << "Cannot delete vertex '" << v << "' from AADG\n";
 
             return false;                           // deletion not possible
         }
@@ -1193,7 +1193,7 @@ bool Layout::deleteNode(vertex_t v) {
 // Create the fuzzer layout for the API Calls.
 //
 bool Layout::makeAPICallLayout(const Function &func) {
-    info(v0) << "Creating the API call layout starting from '" << func.getName() << "'...\n";
+    info(v0) << "Creating the API call layout starting from '" << func.getName().str()<< "'...\n";
 
 
     /* create the AADG starting from the root function */
@@ -1213,7 +1213,7 @@ bool Layout::makeAPICallLayout(const Function &func) {
 
     /* check if AADG is empty */
     if (num_vertices(AADG) < 1) {
-        warning() << "AADG is empty!\n";
+        fwarning() << "AADG is empty!\n";
         return false;                               // failure
     }
 

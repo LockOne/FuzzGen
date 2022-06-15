@@ -383,7 +383,7 @@ bool AnalyzerNGRecursive::runOnModule(Module &M) {
                         new AnalyzerNGRecursive(filenames, modules, pass, ctx), ctx);
     }
 
-    info(v1) << "Callback on module '" << M.getName() << "' has finished.\n";
+    info(v1) << "Callback on module '" << M.getName().str() << "' has finished.\n";
 
 
     return false;                                   // we didn't modify the module's IR

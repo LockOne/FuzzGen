@@ -80,8 +80,8 @@ inline bool Dig::isArray(const Argument *arg) {
         return false;
     }
 
-    return ctx->arrayRef[arg->getParent()->getName()].find(arg->getName()) !=
-           ctx->arrayRef[arg->getParent()->getName()].end();
+    return ctx->arrayRef[arg->getParent()->getName().str()].find(arg->getName().str()) !=
+           ctx->arrayRef[arg->getParent()->getName().str()].end();
 }
 
 
@@ -235,11 +235,11 @@ bool Dig::digInto(Argument *A, Type *type, interwork::Element *elt, uint64_t off
             /* base check. If struct is opaque (forward declared), abort */
             StructType *stTy = dyn_cast<StructType>(type);
             if (stTy->isOpaque()) {
-                warning() << "Opaque struct! Dig failed :(\n";
+                fwarning() << "Opaque struct! Dig failed :(\n";
 
                 elt->attr = new interwork::Attributes<int>(ATTR_DEAD, "struct");
                 elt->baseType   = interwork::Ty_struct;
-                elt->structName = type->getStructName();
+                elt->structName = type->getStructName().str();
                 elt->isBaseTy   = false;
                 break;
             }
@@ -251,13 +251,13 @@ bool Dig::digInto(Argument *A, Type *type, interwork::Element *elt, uint64_t off
 
             /* OPT: Make a hash table to avoid linear search each time */
             for (i=0; i<V.size(); ++i) {
-                if (type->getStructName() == V[i]->getName()) break;
+                if (type->getStructName() == V[i]->getName().str()) break;
             }
 
             if (i >= V.size()) break;               // this should never happen, but leave it for now
 
             elt->baseType   = interwork::Ty_struct;
-            elt->structName = V[i]->getName();
+            elt->structName = V[i]->getName().str();
             elt->fieldName  = "";
             elt->off        = off;                  // start from current point
             elt->isBaseTy   = false;
@@ -284,9 +284,9 @@ bool Dig::digInto(Argument *A, Type *type, interwork::Element *elt, uint64_t off
              */
             if (elt->nptrs() > 0) {
 
-                if (visited.find(V[i]->getName()) == visited.end() || visited[V[i]->getName()] < 1) {
+                if (visited.find(V[i]->getName().str()) == visited.end() || visited[V[i]->getName().str()] < 1) {
                     /* if struct not visited, mark it */
-                    ++visited[V[i]->getName()];
+                    ++visited[V[i]->getName().str()];
                 }
                 else {
                     /* set it to NULL, to avoid infinity loops */
@@ -317,7 +317,7 @@ bool Dig::digInto(Argument *A, Type *type, interwork::Element *elt, uint64_t off
 
                 /* elements have no name, so they inherit parent's argument name */
                 subElt->tyStr      = getTypeStr(eltTy);
-                subElt->name       = A ? A->getName() : "$NONAME$";
+                subElt->name       = A ? A->getName().str() : "$NONAME$";
                 subElt->structName = elt->structName;
                 subElt->parent     = elt;
 
@@ -459,7 +459,7 @@ bool Dig::digInto(Argument *A, Type *type, interwork::Element *elt, uint64_t off
 
         // ------------------------------------------------------------------------------
         else {
-            warning() << "Unknown type '" << *type << "' (TypeID: " << type->getTypeID() << ")\n";
+            fwarning() << "Unknown type '" << *type << "' (TypeID: " << type->getTypeID() << ")\n";
             return false;                           // failure
         }
 
@@ -487,15 +487,15 @@ interwork::Argument *Dig::digType(Argument &funcArg, Type *type, bool doMagic) {
     }
 
 
-    info(v2) << "Analyzing argument '" << funcArg.getName() << "' of type '" << *argTy
+    info(v2) << "Analyzing argument '" << funcArg.getName().str() << "' of type '" << *argTy
              << "'...\n";
 
     interwork::Argument *arg = new interwork::Argument();
-    arg->name  = funcArg.getName();
+    arg->name  = funcArg.getName().str();
     arg->idx   = funcArg.getArgNo();
     arg->tyStr = getTypeStr(argTy);
 
-    string funcName = funcArg.getParent()->getName() ;
+    string funcName = funcArg.getParent()->getName().str();
 
 
     if (arg->name == "") {
@@ -726,7 +726,7 @@ bool DigWrapper::runOnModule(const Module *M) {
     for(Module::const_reverse_iterator ii=M->rbegin(); ii!=M->rend(); ++ii) {
         Function &func = (Function &)*ii;
         
-        if (func.getName() == funcName) {           // name match?
+        if (func.getName().str() == funcName) {           // name match?
             unsigned k;
 
             /* find the appropriate argument */
@@ -758,14 +758,14 @@ bool DigWrapper::runOnModule(const Module *M) {
     for (auto &structTy : structTypes) {            // iterate over structs
         // structTy->dump();
 
-        if (structTy->getName() == Dig::getStructName(type)) {
+        if (structTy->getName().str() == Dig::getStructName(type)) {
             newTy = structTy;
             break;
         }
     }
 
     if (newTy == nullptr) {
-        warning() << "Cannot find struct '" << Dig::getStructName(type) << "' in the new module\n";
+        fwarning() << "Cannot find struct '" << Dig::getStructName(type) << "' in the new module\n";
 
         iwArg = nullptr;
         return false;

@@ -45,7 +45,8 @@
 #include "llvm/Pass.h"                              // llvm includes
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Function.h"
-#include "llvm/IR/CallSite.h"
+#include "llvm/IR/Instructions.h"
+//#include "llvm/IR/CallSite.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/Passes.h"
 #include "llvm/IRReader/IRReader.h"

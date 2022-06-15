@@ -142,7 +142,7 @@ ExternalObj *External::analyzeLocal(const Module *module, const Function *entry)
     // --------------------------------------------------------------------- //
     //                        * Make a unique name *                         //
     // --------------------------------------------------------------------- //
-    string modName = module->getName();             // cast to string
+    string modName = module->getName().str();             // cast to string
     size_t pos;
 
 
@@ -155,7 +155,7 @@ ExternalObj *External::analyzeLocal(const Module *module, const Function *entry)
     }
 
     /* name the object */
-    E->name = modName + "-" + string(entry->getName());
+    E->name = modName + "-" + string(entry->getName().str());
 
     info(v1) << "External Object name is '"<< E->name << "'\n";
     
@@ -247,7 +247,7 @@ ExternalObj *External::analyzeLocal(const Module *module, const Function *entry)
 
         /* show a warning to know what's going on */
         if (APICall->name == "$UNUSED$") {
-            warning() << "Function '" << func->getName() << "' has an empty APICall object.\n";
+            fwarning() << "Function '" << func->getName().str() << "' has an empty APICall object.\n";
 
             for (unsigned j=0; j<func->arg_size(); ++j) {
                 APICall->args.push_back(new interwork::Argument());
@@ -255,13 +255,13 @@ ExternalObj *External::analyzeLocal(const Module *module, const Function *entry)
         }
 
         
-        APICall->name   = func->getName();
+        APICall->name   = func->getName().str();
         APICall->nargs  = func->arg_size();
         APICall->vertex = v;
 
         /* display a warning, as things can go wrong here :P */
         if (APICall->isVariadic) {
-            warning() << "Caution. Function '" << func->getName() << "' is variadic. "
+            fwarning() << "Caution. Function '" << func->getName().str()<< "' is variadic. "
                       << "Things can go wrong here ...\n";
 
             unsigned argOps = E->layout->AADG[v].inst->getNumArgOperands();
@@ -357,7 +357,7 @@ ExternalObj *External::analyzeLocal(const Module *module, const Function *entry)
     //  
     //      if (!E->layout->AADG[v].APICall) {
     //  
-    //          warning() << "Node " << v << " is empty!\n";
+    //          fwarning() << "Node " << v << " is empty!\n";
     //          if (!E->layout->deleteNode(v)) {
     //              fatal() << "Cannot delete node " << v << "!\n";
     //              //++ii;
@@ -508,8 +508,8 @@ ExternalObj *External::analyzeLocal(const Module *module, const Function *entry)
         errstr.pop_back();                          // drop last ", "
         errstr.pop_back();
 
-        warning() << errctr << " vertices have NULL APICall objects: " << errstr << "\n";
-        remark(v2) << "This is due to some error in backward slicing.\n";
+        fwarning() << errctr << " vertices have NULL APICall objects: " << errstr << "\n";
+        fremark(v2) << "This is due to some error in backward slicing.\n";
 
         if (!continueExecution("Discarding the whole AADG.", ctx)) {
             delete E;
@@ -648,7 +648,7 @@ void External::coalesceAADGs() {
 bool External::runOnModule(Module &M) {
    
     /* Analyzer-NG does invokes directly the Pass, so the the last module is not in the vector */     
-    if (!modsNG.add(M.getName(), &M)) {             // add the last module to the vector
+    if (!modsNG.add(M.getName().str(), &M)) {             // add the last module to the vector
         fatal() << "Cannot add the last module to the modules vector\n";
         return false;
     }
@@ -676,7 +676,7 @@ bool External::runOnModule(Module &M) {
         }
 
 
-        info(v0) << "Analyzing module '" << (*ii)->module->getName() << "' ...\n";
+        info(v0) << "Analyzing module '" << (*ii)->module->getName().str()<< "' ...\n";
 
         AnalyzerNG *analyzer = new AnalyzerNG(ctx);
         set<string> rootFuncs;
@@ -692,8 +692,8 @@ bool External::runOnModule(Module &M) {
         /* for each root function build an AADG */
         for(auto jj=(*ii)->module->begin(); jj!=(*ii)->module->end(); ++jj) {        
 
-            if (rootFuncs.find(jj->getName()) != rootFuncs.end()) {            
-                info(v1) << "    Analyzing root function '" << jj->getName() << "' ...\n";
+            if (rootFuncs.find(jj->getName().str()) != rootFuncs.end()) {            
+                info(v1) << "    Analyzing root function '" << jj->getName().str() << "' ...\n";
 
                 const Function &func = *jj;         // we need this for casting issues
 
@@ -707,7 +707,7 @@ bool External::runOnModule(Module &M) {
                         Context::AADGInfo(E->layout->AADGsize(), E->layout->AADGedges(), E->name));
 
                 } else {
-                    warning() << "Local analysis failed. Much sad :(\n";                    
+                    fwarning() << "Local analysis failed. Much sad :(\n";                    
                 }
             }
         }    
@@ -729,9 +729,8 @@ bool External::runOnModule(Module &M) {
                 }
             }
             
-            extObjs.erase(ii);
-
             delete (*ii)->layout;
+            ii = extObjs.erase(ii);
 
         } else ++ii;                                // object is good. Move iterator
     }

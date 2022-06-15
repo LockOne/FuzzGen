@@ -104,7 +104,7 @@ bool EnumFunctions::runOnModule(Module &M) {
     for (Module::const_iterator ii=M.begin(); ii!=M.end(); ++ii) {
 
         /* make sure that is not blacklisted */
-        if (!Root::inBlacklist(ii->getName())) {
+        if (!Root::inBlacklist(ii->getName().str())) {
 
             /* make sure that it has a function body */
             if (!ii->isDeclaration()) {
@@ -113,9 +113,9 @@ bool EnumFunctions::runOnModule(Module &M) {
                 if (ii->getLinkage() == GlobalValue::LinkageTypes::ExternalLinkage) {                
 
                     /* all checks have passed. Add function to the set */
-                    funcs.insert(string(ii->getName()));
+                    funcs.insert(ii->getName().str());
  
-                    info(v3) << "Library function '"  << ii->getName() << "' found.\n";
+                    info(v3) << "Library function '"  << ii->getName().str() << "' found.\n";
                 }
             }
         }
@@ -245,7 +245,7 @@ bool InferAPI::searchModules(string currDir) {
     if ((dir = opendir(currDir.c_str())) == NULL) {
         fatal() << "Cannot open current directory '" << currDir << "'. Abort\n";
 
-        remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
+        fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
         return false;
     }
 
@@ -277,7 +277,7 @@ bool InferAPI::searchModules(string currDir) {
                 if (!ifs) {
                     fatal() << "Cannot open '" << path << "'. Abort.\n";
 
-                    remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
+                    fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
                     return false;                    // failure
                 }
 
@@ -321,7 +321,7 @@ bool InferAPI::searchModules(string currDir) {
         } else {
             fatal() << "stat() error. Much sad. Skipping current file\n";
 
-            remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
+            fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
         }
     }
 
@@ -366,7 +366,7 @@ string InferAPI::findHeaderPath(string header) {
         if ((dir = opendir(full.c_str())) == NULL) {
             fatal() << "Cannot open current directory '" << full << "'. Abort\n";
 
-            remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
+            fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
             return "";                              // failure
         }
 
@@ -401,7 +401,7 @@ string InferAPI::findHeaderPath(string header) {
             } else {
                 fatal() << "stat() error. Much sad. Skipping current file\n";
 
-                remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
+                fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
             }
         }
 
@@ -435,7 +435,7 @@ bool InferAPI::extractHeaders(string sourcePath, set<string> &includes) {
     if (!ifs) {
         fatal() << "Cannot open '" << fullSourcePath << "'. Abort.\n";
 
-        remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
+        fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";
         return false;                               // failure.
     }
 
@@ -621,7 +621,7 @@ bool InferAPI::inferAPI() {
 
 
     for (auto ii=extAPIset.begin(); ii!=extAPIset.end(); ++ii) {
-        remark(v2) << "API function " << *ii << " is used by the external modules.\n";
+        fremark(v2) << "API function " << *ii << " is used by the external modules.\n";
     }
 
 

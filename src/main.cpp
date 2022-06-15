@@ -69,7 +69,7 @@
     ofstream ofs(filename);                                             \
     if (!ofs) {                                                         \
         fatal() << "Cannot create file '" << filename << "'.\n";        \
-        remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";  \
+        fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";  \
         return false;                                                   \
     }                                                                   \
                                                                         \
@@ -86,11 +86,11 @@
 #define MK_DIR(dirname)                                                         \
  if (mkdir(dirname, 0755) == -1) {                                              \
         if (errno == EEXIST) {                                                  \
-            remark(v0) << "Directory '" << dirname << "' already exists.\n";    \
+            fremark(v0) << "Directory '" << dirname << "' already exists.\n";    \
         } else {                                                                \
             fatal() << "Cannot create fuzzer directory '" << dirname << "'.\n"; \
                                                                                 \
-            remark(v0) << "Error Message: '" << strerror(errno) << "'.\n"       \
+            fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n"       \
                        << ABORT_MSG;                                            \
             return -1;                                                          \
         }                                                                       \
@@ -363,7 +363,7 @@ bool parseArguments(int argc, char **argv) {
     bool missing = false;
 
 
-    remark(v0) << "Please make sure that command line arguments are not malformed. "
+    fremark(v0) << "Please make sure that command line arguments are not malformed. "
                << "I'm too lazy for an extensive argument checking :\\\n";
 
     switch (argMode) {
@@ -378,11 +378,11 @@ bool parseArguments(int argc, char **argv) {
 
             if (argLibPath == ".") {
                 
-                warning() << "Library path is not set. This is OK for Debian libraries, but "
+                fwarning() << "Library path is not set. This is OK for Debian libraries, but "
                           << "for Android you must specify '-path' option\n";
 
 
-                warning() << "UPDATE: without '-path' on Android libs FuzzGen may crash\n";
+                fwarning() << "UPDATE: without '-path' on Android libs FuzzGen may crash\n";
 
                 if (!continueExecution("", &ctx)) {
                     return false;
@@ -396,13 +396,14 @@ bool parseArguments(int argc, char **argv) {
                 SHOW_MISSING("-static-libs", "Static library list");
                 SHOW_MISSING("-shared-libs", "Shared library list");
                 
-                remark(v0) << "Set at least one of '-static-libs' or '-shared-libs'.\n";
+                fremark(v0) << "Set at least one of '-static-libs' or '-shared-libs'.\n";
             }
 
             if (argLibPath   == ".") { SHOW_MISSING("-path", "Library path in AOSP"); }
             if (argFuzzerDir == "")  { SHOW_MISSING("-outdir", "Fuzzer output directory"); }
 
             // do not break
+            // fall through
 
         case debian:
             if (argMeta        == "") { SHOW_MISSING("-meta", "Metadata file"); }
@@ -491,7 +492,7 @@ bool dumpFunctions(string library) {
     /* write all functions to a file */
     DUMP_FUNCTIONS_TO_FILE(functions, FUNCTIONS_FILE);
 
-    remark(v0) << "To find all source files that use functions from this library, type "
+    fremark(v0) << "To find all source files that use functions from this library, type "
                << "'grep --recursive --max-count=1 --file=" << FUNCTIONS_FILE << " $SRC_DIR'\n";
 
     return true;
@@ -505,7 +506,7 @@ bool dumpFunctions(string library) {
 bool dumpAPI(string library, string libRoot, string libPath, string consumerDir) {
     /* load library's metadata */
     if (!loadMeta(argMeta)) {
-        remark(v0) << "Metadata file is crucial for FuzzGen. Please make sure it's available.\n";
+        fremark(v0) << "Metadata file is crucial for FuzzGen. Please make sure it's available.\n";
         return false;
     }
 
@@ -558,7 +559,7 @@ int main(int argc, char **argv) {
     // --------------------------------------------------------------------- //
     if (argMode == dump_functions) {
         if (!dumpFunctions(argLibrary)) {    
-            remark(v0) << ABORT_MSG;
+            fremark(v0) << ABORT_MSG;
             return -1;
         }
 
@@ -566,7 +567,7 @@ int main(int argc, char **argv) {
 
     } else if (argMode == dump_api) {        
         if (!dumpAPI(argLibrary, argLibRoot, argLibPath, argConsumerDir)) {
-            remark(v0) << ABORT_MSG;
+            fremark(v0) << ABORT_MSG;
             return -1;
         }
 
@@ -579,7 +580,7 @@ int main(int argc, char **argv) {
     // --------------------------------------------------------------------- //  
     /* load library's metadata */
     if (!loadMeta(argMeta)) {
-        remark(v0) << "Metadata file is crucial for FuzzGen. Please make sure it's available.\n";
+        fremark(v0) << "Metadata file is crucial for FuzzGen. Please make sure it's available.\n";
         return -1;                                  // errors are fatal here
     }
 
@@ -604,7 +605,7 @@ int main(int argc, char **argv) {
         if (!infer_api.inferAPI()) {
             fatal() << "Cannot infer library's API.\n";
 
-            remark(v0) << ABORT_MSG;
+            fremark(v0) << ABORT_MSG;
             return -1;
         }
 
@@ -625,7 +626,7 @@ int main(int argc, char **argv) {
             if (!infer_aux_api.inferAPI()) {
                 fatal() << "Cannot infer auxiliary library's API.\n";
 
-                remark(v0) << ABORT_MSG;
+                fremark(v0) << ABORT_MSG;
                 return -1;
             }
 
@@ -657,7 +658,7 @@ int main(int argc, char **argv) {
         //     if (!analyzer.quickRun(argLibrary, new Internal(&libAPI, &intrlCalls, &ctx))) {
         //         fatal() << "Cannot run Internal module on library file.\n";
         // 
-        //         remark(v0) << ABORT_MSG;
+        //         fremark(v0) << ABORT_MSG;
         //         return -1;
         //     }
         // 
@@ -673,7 +674,7 @@ int main(int argc, char **argv) {
         // 
         //         /* if current pool has too many functions, split it */
         //         if (composer.size(currPool) >= MAX_FUNCS_PER_POOL) {
-        //             warning() << "Pool #" << currPool << " has too many functions. Splitting...\n";
+        //             fwarning() << "Pool #" << currPool << " has too many functions. Splitting...\n";
         // 
         //             currPool = composer.mkpool();
         //         }
@@ -683,7 +684,7 @@ int main(int argc, char **argv) {
         //             fatal() << "Cannot push function to this pool.\n"
         //                     << "Cannot create function pools.\n";
         // 
-        //             remark(v0) << ABORT_MSG;
+        //             fremark(v0) << ABORT_MSG;
         //             return -1;
         //         }
         // 
@@ -696,7 +697,7 @@ int main(int argc, char **argv) {
         //     if (!composer.generate(FUZZER_SOURCE_EXTENSION, ctx.flags)) {
         //         fatal() << "Cannot generate fuzzer.\n";
         // 
-        //         remark(v0) << ABORT_MSG;
+        //         fremark(v0) << ABORT_MSG;
         //         return -1;
         //     }
         // }
@@ -716,7 +717,7 @@ int main(int argc, char **argv) {
         if (!analyzer.quickRun(argLibrary, new Internal(&extAPI, &intrlCalls, &ctx))) {
             fatal() << "Cannot run Internal module on library file.\n";
 
-            remark(v0) << ABORT_MSG;
+            fremark(v0) << ABORT_MSG;
             return -1;
         }
 
@@ -726,7 +727,7 @@ int main(int argc, char **argv) {
             if (!analyzer.quickRun(argAuxLibrary, new Internal(&extAPI, &intrlCalls, &ctx))) {
                 fatal() << "Cannot run Internal module on library file.\n";
 
-                remark(v0) << ABORT_MSG;
+                fremark(v0) << ABORT_MSG;
                 return -1;
             }
         }
@@ -746,7 +747,7 @@ int main(int argc, char **argv) {
         if (!analyzer.run()) {                
             fatal() << "Cannot run External modules + library file.\n";
 
-            remark(v0) << ABORT_MSG;
+            fremark(v0) << ABORT_MSG;
             return -1;
         }
 
@@ -754,7 +755,7 @@ int main(int argc, char **argv) {
         if (extObjs.size() < 1) {
             fatal() << "No external objects created. Much sad :(\n";
 
-            // remark(v0) << "If still want to generate a fuzzer, you can try again "
+            // fremark(v0) << "If still want to generate a fuzzer, you can try again "
             //            << "with the '-no-external' option.\n"
             //            << ABORT_MSG;
 
@@ -772,7 +773,7 @@ int main(int argc, char **argv) {
             /* create fuzzer directory */
             MK_DIR(currDir.c_str());
 
-            remark(v0) << "Synthesizing fuzzer from" << (*ii)->name << " ...\n";
+            fremark(v0) << "Synthesizing fuzzer from" << (*ii)->name << " ...\n";
 
             subdirs.push_back((*ii)->name);
 
@@ -790,7 +791,7 @@ int main(int argc, char **argv) {
 
                     /* if current pool has too many functions, split it */
                     if (composer->size(currPool) >= MAX_FUNCS_PER_POOL) {
-                        warning() << "Pool #" << currPool << " has too many functions. Splitting...\n";
+                        fwarning() << "Pool #" << currPool << " has too many functions. Splitting...\n";
 
                         currPool = composer->mkpool();
                     }
@@ -800,7 +801,7 @@ int main(int argc, char **argv) {
                         fatal() << "Cannot push function to this pool.\n"
                                 << "Cannot create function pools.\n";
                         
-                        remark(v0) << ABORT_MSG;
+                        fremark(v0) << ABORT_MSG;
                         return -1;
                     }
 
@@ -817,13 +818,13 @@ int main(int argc, char **argv) {
                 if (!composer->generate((*ii)->name, ctx.flags)) {
                     fatal() << "Cannot generate fuzzer.\n";
 
-                    remark(v0) << ABORT_MSG;
+                    fremark(v0) << ABORT_MSG;
                     return -1;
                 }
             } catch(FuzzGenException &e) {
                 fatal() << "An exception was thrown: " << e.what() << ".\n";
 
-                remark(v0) << "Discarding current fuzzer '" << (*ii)->name << "'.\n";
+                fremark(v0) << "Discarding current fuzzer '" << (*ii)->name << "'.\n";
                 error = true;
             }
 
@@ -837,7 +838,7 @@ int main(int argc, char **argv) {
      } catch(FuzzGenException &e) {
         fatal() << "An exception was thrown: " << e.what() << ".\n";
         
-        remark(v0) << ABORT_MSG;
+        fremark(v0) << ABORT_MSG;
         return -1;
     }
 
@@ -879,11 +880,11 @@ int main(int argc, char **argv) {
 
     info(v0)   << "\n";
 
-    if (!error) remark(v0) << "FuzzGen finished successfully!\n";
-    else        remark(v0) << "FuzzGen finished with errors. Much Sad :(\n";
+    if (!error) fremark(v0) << "FuzzGen finished successfully!\n";
+    else        fremark(v0) << "FuzzGen finished with errors. Much Sad :(\n";
 
 
-    remark(v0) << "Have a nice day :)\n";
+    fremark(v0) << "Have a nice day :)\n";
 
     return 0;
 }

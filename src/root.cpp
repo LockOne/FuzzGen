@@ -123,8 +123,8 @@ bool Root::runOnModule(Module &M) {
         for (Function::iterator jj=ii->begin(); jj!=ii->end(); ++jj) {
 
             /* assume that function has no XREFs to */
-            if (xrefs_to.find(ii->getName()) == xrefs_to.end()) {
-                xrefs_to[ii->getName()] = false;
+            if (xrefs_to.find(ii->getName().str()) == xrefs_to.end()) {
+                xrefs_to[ii->getName().str()] = false;
             }
 
 
@@ -148,10 +148,10 @@ bool Root::runOnModule(Module &M) {
 
 
                         /* not all function pointers have a known value at compile time */
-                        if (st->getOperand(0)->getName() != "") {
-                            fptrs[ st->getOperand(0)->getName() ] = true;
+                        if (st->getOperand(0)->getName().str()!= "") {
+                            fptrs[ st->getOperand(0)->getName().str()] = true;
                         } else {
-                            remark(v3) << "(an empty name means that we don't know the pointer "
+                            fremark(v3) << "(an empty name means that we don't know the pointer "
                                      << "value at compile time)\n";
                         }
                     }
@@ -163,7 +163,7 @@ bool Root::runOnModule(Module &M) {
 
                     /* current function invokes another function. It can't be part of the API */
                     if (callee != nullptr) {
-                        xrefs_to[callee->getName()] = true;
+                        xrefs_to[callee->getName().str()] = true;
                     }
                 }
             }
@@ -187,7 +187,7 @@ bool Root::runOnModule(Module &M) {
 
         /* check if node is root (>1, b/c all nodes are children of a "fake" node) */
         if (callGraphNode->getNumReferences() > 1 || func == nullptr) {
-            if (func) info(v3) << "  Skipping function '" << func->getName() << "'\n";
+            if (func) info(v3) << "  Skipping function '" << func->getName().str() << "'\n";
             continue;                               // keep only "root" nodes
         }
       
@@ -199,31 +199,31 @@ bool Root::runOnModule(Module &M) {
         // --------------------------------------------------------------------- //
 
         /* Call Graph is imprecise. Use XREFs as a second check */
-        if (xrefs_to[func->getName()] == true) {
-            info(v3) << "  Function '" << func->getName() << "' has an XREF to, "
+        if (xrefs_to[func->getName().str()] == true) {
+            info(v3) << "  Function '" << func->getName().str()<< "' has an XREF to, "
                      << "so it's not a root. Skip.\n";
 
             continue;
         }
 
         /* check if function is a function pointer */
-        if (fptrs.find(func->getName()) != fptrs.end()) {
-            info(v3) << "  Function '" << func->getName() << "' is a root, but is also"
+        if (fptrs.find(func->getName().str()) != fptrs.end()) {
+            info(v3) << "  Function '" << func->getName().str()<< "' is a root, but is also"
                      << " used by a function pointer. Skip.\n";
 
             continue;
         }
 
         /* check whether function is blacklisted */
-        if (inBlacklist(func->getName())) {
-            info(v3) << "  Function '" << func->getName() << "' is a root, but is blacklisted."
+        if (inBlacklist(func->getName().str())) {
+            info(v3) << "  Function '" << func->getName().str()<< "' is a root, but is blacklisted."
                      << " Skip.\n";
             continue;
         }
 
         /* drop functions without a body */
         if (func->isDeclaration()) {
-            info(v3) << "  Function '" << func->getName() << "' does not have a body."
+            info(v3) << "  Function '" << func->getName().str()<< "' does not have a body."
                      << " Skip.\n";
             continue;
         }
@@ -231,17 +231,17 @@ bool Root::runOnModule(Module &M) {
         /* drop functions without a body */
         // ii->getLinkage() == GlobalValue::LinkageTypes::ExternalLinkage
         if (!func->hasExternalLinkage()) {
-            info(v3) << "  Function '" << func->getName() << "' does not have external linkage "
+            info(v3) << "  Function '" << func->getName().str()<< "' does not have external linkage "
                      << "(i.e., not accessible from outside). Skip.\n";
             continue;
         }
         
 
-        info(v1) << "  Function '" << func->getName() << "' is a root!\n";
+        info(v1) << "  Function '" << func->getName().str()<< "' is a root!\n";
 
 
         /* add function to the root set */
-        roots.insert(func->getName());
+        roots.insert(func->getName().str());
     }
 
     info(v0) << "Done. " << roots.size() << " root functions found.\n";

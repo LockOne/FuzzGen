@@ -582,7 +582,7 @@ uint16_t Composer::mkpool() {
 //
 bool Composer::push(uint16_t poolID, APICall *call) {
     /* check if index is valid first */
-    if (poolID < 0 || poolID >= pool.size()) {
+    if (poolID >= pool.size()) {
         return false;                               // failure x(
     }
 
@@ -970,7 +970,7 @@ string Composer::makeForLoops(unsigned iterFrom, vector<size_t> upper, string bo
 string Composer::makeAssign(string name, Argument *arg, unsigned deep=0) {
     if (arg->baseType == Ty_struct) {
         /* structs can't be assigned directly. Element must be assigned instead */
-        remark(v2) << "makeAssign() creates a struct!\n";
+        fremark(v2) << "makeAssign() creates a struct!\n";
 
 
         /* if struct is initialized from another dependency, make the assignment first */
@@ -1121,7 +1121,7 @@ string Composer::makeVar() {
 
     /* make sure that each variable is unique. Don't rely on randomness ;) */
     if (prev.find(var) != prev.end()) {
-        remark(v2) << "Variable '" << var << "' already declared! Trying another one...\n";
+        fremark(v2) << "Variable '" << var << "' already declared! Trying another one...\n";
         return makeVar();
     }
 
@@ -1762,7 +1762,7 @@ string Composer::makeStruct(Element *elt, unsigned deep, string name) {
 
     /* just in case that this happens, inform the user */
     if (!elt->subElements.size()) {
-        warning() << "A struct without elements has been encountered. Something is wrong x(\n";
+        fwarning() << "A struct without elements has been encountered. Something is wrong x(\n";
     }
 
 
@@ -2217,7 +2217,7 @@ couple Composer::makeCall(APICall *call, int poolID) {
 
 
     for (size_t i=0; i<call->depAsg.size(); ++i)
-        remark(v2) << "D: " << prettyDep(call->depAsg[i]) << "\n";
+        fremark(v2) << "D: " << prettyDep(call->depAsg[i]) << "\n";
 
     depDecl = "";                                   // clear any previous dependency declarations
 
@@ -2501,7 +2501,7 @@ string Composer::fixIncludes(void) {
             depth_first_search(G, visitor(V));      // do a DFS looking for backward edges
 
             if (hasCycle) {
-                warning() << "Edge ('" << hdr << "', '" << jj << "') creates a cycle."
+                fwarning() << "Edge ('" << hdr << "', '" << jj << "') creates a cycle."
                           << " Removing it...\n";
 
                 /* clear cycle */
@@ -2560,7 +2560,7 @@ int Composer::makeFuzzer(string outfile, int flags, string body) {
     if (!ofs) {
         fatal() << "Cannot create file.\n";
 
-        remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";        
+        fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";        
         return -1;                                  // failure
     }
 
@@ -2645,9 +2645,9 @@ int Composer::makeFuzzer(string outfile, int flags, string body) {
         }
 
         info(v0)   << "Compiling (partial) fuzzer...\n";
-        remark(v0) << "(in case of an error, try to run me again by specifing "
+        fremark(v0) << "(in case of an error, try to run me again by specifing "
                    << "the '-no-progressive' option)\n";
-        remark(v0) << "Compilation might take while .....\r\r\n";
+        fremark(v0) << "Compilation might take while .....\r\r\n";
 
         /* create a BASH pipe */
         if (!(fp = popen("bash", "w"))) {
@@ -2759,7 +2759,7 @@ bool Composer::generate(string outfile, int flags) {
             header[NAME].compare(0, ctx->libPath.size(), ctx->libPath) &&        \
             header[NAME].compare(0, ctx->auxLibPath.size(), ctx->auxLibPath))) { \
                                                                                  \
-        warning() << "Discarding function '" << NAME                             \
+        fwarning() << "Discarding function '" << NAME                             \
                   << "' due to its bad header...\n";                             \
                                                                                  \
         /* report the appropriate issue */                                       \
@@ -2942,7 +2942,7 @@ bool Composer::generate(string outfile, int flags) {
 
 
     if (!nbufs) {
-        warning() << "There are no buffers to fuzz in the final Fuzzer! This may be a bug.\n";
+        fwarning() << "There are no buffers to fuzz in the final Fuzzer! This may be a bug.\n";
     }
 
     /* don't forget to generate the final fuzzer */
@@ -2973,7 +2973,7 @@ bool Composer::genMakefile(string outfile) {
     if (!ofs) {
         fatal() << "Cannot create Makefile.\n";
 
-        remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";      
+        fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";      
         return false;
     }
 
@@ -3022,7 +3022,7 @@ bool Composer::generateGlobalMakefile(string outfile, vector<string> &subdirs) {
     if (!ofs) {
         fatal() << "Cannot create Global Makefile.\n";
 
-        remark(v0) << "Error Message: '" << strerror(errno) << "'.\n";      
+        fremark(v0) << "Error Message: '" << strerror(errno) << "'.\n";      
         return false;
     }
 

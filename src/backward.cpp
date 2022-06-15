@@ -83,13 +83,13 @@ const AllocaInst *Backward::findAlloca(const Value *val, deque<const Instruction
         /* for calls, we can't just "jump" from the return value chain to the arguments' chains */
         else if (const CallInst *call = dyn_cast<CallInst>(val)) {
             if (call->getCalledFunction() == nullptr) {
-                warning() << "Cannot get called function!\n";
+                fwarning() << "Cannot get called function!\n";
 
                 status = ST_ERROR_NO_ALLOCA;
                 return nullptr;                     // we can't get name
             }
 
-            calledFunc = call->getCalledFunction()->getName();
+            calledFunc = call->getCalledFunction()->getName().str();
             status     = ST_ERROR_CALL_FOUND;
             return nullptr;                         // analysis failed
         }
@@ -243,7 +243,7 @@ list<StoreOp *> Backward::findStores(const AllocaInst *alloca, const Instruction
 
             /* make sure that function is valid */
             if (call->getCalledFunction() == nullptr) {
-                warning() << "Cannot get called function!\n";
+                fwarning() << "Cannot get called function!\n";
                 continue;                           // we can't get name
             }
 
@@ -251,7 +251,7 @@ list<StoreOp *> Backward::findStores(const AllocaInst *alloca, const Instruction
             // If the value is passed by reference into a function, it may be set internally
             // so we have an implicit store. Thus, we recursively follow the callee to inspect
             // its store operations.
-            string         name    = call->getCalledFunction()->getName();
+            string         name    = call->getCalledFunction()->getName().str();
             const Function *callee = call->getCalledFunction();
             const Use      *a1;
             const Argument *a2;
@@ -387,7 +387,7 @@ interwork::Element *Backward::findIWElement(deque<const Instruction *> &chain,
                     }
 
                 } else {
-                    warning() << "Unknown GEP type: " << *ii << "Skip.\n";
+                    fwarning() << "Unknown GEP type: " << *ii << "Skip.\n";
 
                     return nullptr;                 // failure
                 }
@@ -476,7 +476,7 @@ interwork::BaseAttr *Backward::extractConst(const Value *val, interwork::Argumen
         interwork::Attributes<int> *attr = 
                 new interwork::Attributes<int>(ATTR_FUNCPTR, "");
 
-        attr->addRef(func->getName());
+        attr->addRef(func->getName().str());
 
         return attr;
     }
@@ -519,8 +519,8 @@ interwork::BaseAttr *Backward::extractConst(const Value *val, interwork::Argumen
                         new interwork::Attributes<int64_t>(ATTR_PREDEFINED, "int64_t");
 
                 /* get array size */
-                iwArg->nsz = agg->getNumElements();
-                iwArg->sz.push_back(agg->getNumElements());
+                iwArg->nsz = agg->getElementCount().getValue();
+                iwArg->sz.push_back(agg->getElementCount().getValue());
               
                 /* assume that type size is ok */
                 if (const ConstantInt *ci = dyn_cast<ConstantInt>(agg->getElementValue((unsigned)0))) {
@@ -561,7 +561,7 @@ interwork::BaseAttr *Backward::extractConst(const Value *val, interwork::Argumen
         }
 
 
-        warning() << "Constant expression analysis may failed. Please check this.\n";
+        fwarning() << "Constant expression analysis may failed. Please check this.\n";
 
         /* not a static array. Just return a dead argument */
         return new interwork::Attributes<uint8_t>(ATTR_NULLPTR, "uint8_t");
@@ -596,7 +596,7 @@ bool Backward::analyzeWrapper(const Function *F, interwork::FunctionPtr* &funcPt
     unsigned       N       = 0;
 
 
-    info(v1) << "Analyzing function pointer '" << F->getName() << "'\n";
+    info(v1) << "Analyzing function pointer '" << F->getName().str() << "'\n";
 
     /* make sure that funcPtr is properly initialized */
     if (funcPtr == nullptr) {
@@ -610,11 +610,11 @@ bool Backward::analyzeWrapper(const Function *F, interwork::FunctionPtr* &funcPt
         /* look for call instructions */
         if (const CallInst *call = dyn_cast<CallInst>(&inst)) {
             if (call->getCalledFunction() == nullptr) {
-                warning() << "Cannot get called function!\n";
+                fwarning() << "Cannot get called function!\n";
                 continue;                           // we can't get name
             }
 
-            funcPtr->callee = call->getCalledFunction()->getName();
+            funcPtr->callee = call->getCalledFunction()->getName().str();
 
             if (Root::inBlacklist(funcPtr->callee)) {
                 continue;                           // skip blacklisted functions
@@ -919,7 +919,7 @@ bool Backward::adjustType(llvm::Argument *arg, Type *allocaTy, interwork::Argume
      * ------------------------------------------------------------------------ */
     if (!iwArg->compare(Dig::getTypeStr(allocaTy), true)) {
         interwork::Argument *iwArg2 = iwArg;
-        StringRef           funName = arg->getParent()->getName();
+        StringRef           funName = arg->getParent()->getName().str();
         Type                *type   = allocaTy;
         
 
@@ -1318,8 +1318,8 @@ int Backward::backwardSlicing(llvm::Argument *arg, const Value *val, interwork::
                 const Function *funcptr = dyn_cast<Function>(value->stripPointerCasts());
                 
                 /* check if function pointer is part of the API */
-                if (libAPI.find(funcptr->getName()) != libAPI.end()) {
-                    info(v1) << "Function pointer '" << funcptr->getName()
+                if (libAPI.find(funcptr->getName().str()) != libAPI.end()) {
+                    info(v1) << "Function pointer '" << funcptr->getName().str()
                              << "' is part of the API.\n";
 
                     if (!iwElt->funcptr) {          // make sure that it's initialized
@@ -1399,10 +1399,10 @@ int Backward::backwardSlicing(llvm::Argument *arg, const Value *val, interwork::
                 } else {
                    
                     // TODO: This is very naive. Find a better way to do it.
-                    if (value->getName() == "data") {
+                    if (value->getName().str() == "data") {
                         iwElt->attr->flags |= ATTR_ARRAY;
                     
-                    } else if (value->getName() == "size") {
+                    } else if (value->getName().str() == "size") {
                         iwElt->attr->flags |= ATTR_ARRAYSIZE;
                     
                     } else {

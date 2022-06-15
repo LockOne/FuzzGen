@@ -69,10 +69,10 @@ bool continueExecution(std::string msg, Context *ctx) {
     }
 
     if (msg != "") {
-        remark(v0) << msg << "\n";                  // display a message if exists
+        fremark(v0) << msg << "\n";                  // display a message if exists
     }
 
-    remark(v0) << "Continue? [y/n] ";
+    fremark(v0) << "Continue? [y/n] ";
 
     std::cin >> ans;
 
